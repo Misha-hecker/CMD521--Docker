@@ -1,20 +1,26 @@
+#!groovy
+
 pipeline {
     agent any
+
     stages {
-        stage('Deploy to Host') {
+        stage("Create Site image") {
             steps {
+                echo '🧱 Building Site image ...'
+                sh "docker build --no-cache -t mihajlo1357/site ."
+            }
+        }
+
+        stage("Deploy Site on remote server") {
+            steps {
+                echo "🌐 Deploying Site container on remote server ..."
                 sh '''
-                    # Збираємо образ прямо на хості
-                    docker -H unix:///var/run/docker.sock build -t mihajlo1357/site:latest .
-                    
-                    # Видаляємо старий контейнер на хості
-                    docker -H unix:///var/run/docker.sock rm -f site-worker || true
-                    
-                    # Запускаємо на хості (порт 8085)
-                    docker -H unix:///var/run/docker.sock run -d --name site-worker -p 8085:80 mihajlo1357/site:latest
-                    
-                    # Перевіряємо запуск на хості
-                    docker -H unix:///var/run/docker.sock ps | grep site-worker
+                    echo "🧹 Cleaning up old Site container and image..."
+                    docker stop site || true
+                    docker rm site || true
+
+                    echo "🚀 Starting new Site container..."
+                    docker run -d --name site --restart=always -p 0.0.0.0:80:80   mihajlo1357/site
                 '''
             }
         }
