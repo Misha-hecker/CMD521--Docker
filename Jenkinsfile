@@ -7,7 +7,7 @@ pipeline {
         stage("Create Site image") {
             steps {
                 echo '🧱 Building Site image ...'
-                sh "docker build --no-cache -t macnaer/site ."
+                sh "docker build --no-cache -t mihajlo1357/site ."
             }
         }
 
