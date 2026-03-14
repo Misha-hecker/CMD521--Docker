@@ -1,26 +1,21 @@
-#!groovy
-
 pipeline {
     agent any
-
     stages {
-        stage("Create Site image") {
+        stage("Build & Run") {
             steps {
-                echo '🧱 Building Site image ...'
-                sh "docker build --no-cache -t mihajlo1357/site ."
-            }
-        }
-
-        stage("Deploy Site on remote server") {
-            steps {
-                echo "🌐 Deploying Site container on remote server ..."
                 sh '''
-                    echo "🧹 Cleaning up old Site container and image..."
+                    # Збираємо образ локально на сервері
+                    docker build -t mihajlo1357/site:latest .
+                    
+                    # Зупиняємо старий контейнер, якщо він був
                     docker stop site || true
                     docker rm site || true
-
-                    echo "🚀 Starting new Site container..."
-                    docker run -d --name site --restart=always -p 0.0.0.0:80:80   mihajlo1357/site
+                    
+                    # Запускаємо на порту 8085 (щоб не було конфліктів)
+                    docker run -d --name site -p 8085:80 mihajlo1357/site:latest
+                    
+                    # Перевіряємо, чи він з'явився у списку запущених
+                    docker ps | grep site
                 '''
             }
         }
