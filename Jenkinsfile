@@ -1,31 +1,21 @@
 pipeline {
     agent any
-
     stages {
-        stage('Cleanup') {
+        stage('Deploy to Host') {
             steps {
-                echo '🧹 Видаляємо старі контейнери...'
-                // Видаляємо старий контейнер, якщо він є. '|| true' не дасть білду впасти, якщо контейнера нема.
-                sh 'docker rm -f site-worker || true'
-            }
-        }
-
-        stage('Build Image') {
-            steps {
-                echo '🔨 Збірка образу...'
-                // Збираємо образ локально на хості
-                sh 'docker build -t my-jenkins-site:latest .'
-            }
-        }
-
-        stage('Run Site') {
-            steps {
-                echo '🚀 Запуск сайту...'
-                // Запускаємо на порту 8085 (або будь-якому іншому вільному)
-                sh 'docker run -d --name site-worker -p 8085:80 my-jenkins-site:latest'
-                
-                echo '✅ Перевірка чи піднявся процес:'
-                sh 'docker ps | grep site-worker'
+                sh '''
+                    # Збираємо образ прямо на хості
+                    docker -H unix:///var/run/docker.sock build -t mihajlo1357/site:latest .
+                    
+                    # Видаляємо старий контейнер на хості
+                    docker -H unix:///var/run/docker.sock rm -f site-worker || true
+                    
+                    # Запускаємо на хості (порт 8085)
+                    docker -H unix:///var/run/docker.sock run -d --name site-worker -p 8085:80 mihajlo1357/site:latest
+                    
+                    # Перевіряємо запуск на хості
+                    docker -H unix:///var/run/docker.sock ps | grep site-worker
+                '''
             }
         }
     }
