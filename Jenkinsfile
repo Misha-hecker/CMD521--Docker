@@ -20,7 +20,7 @@ pipeline {
                     docker rm site || true
 
                     echo "🚀 Starting new Site container..."
-                    docker run -d --name site --restart=always -p 0.0.0.0:80:80   macnaer/site
+                    docker run -d --name site --restart=always -p 0.0.0.0:80:80   mihajlo1357/site
                 '''
             }
         }
