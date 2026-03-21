@@ -1,32 +1,33 @@
 pipeline {
+    // ЗМІНИ ТУТ: замість 'any' пишемо лейбл твого агента
     agent { label 'docker-node' } 
 
     stages {
         stage('Checkout') {
             steps {
-                // Вказуємо твій форк
+                echo '🚚 Клонування репозиторію...'
                 git 'https://github.com/Misha-hecker/CMD521--Docker.git'
             }
         }
 
         stage("Create Site image") {
             steps {
-                echo '🧱 Building Site image ...'
-                // Збираємо образ локально
+                echo '🧱 Building Site image on Agent...'
+                // Додаємо --no-cache, щоб образ завжди оновлювався
                 sh "docker build --no-cache -t mihajlo1357/site ."
             }
         }
 
-        stage("Deploy Site locally") {
+        stage("Deploy Site on Agent") {
             steps {
-                echo "🌐 Deploying Site container on this server ..."
+                echo "🌐 Deploying Site container on remote agent..."
                 sh '''
                     echo "🧹 Cleaning up old containers..."
                     docker stop site || true
                     docker rm site || true
 
                     echo "🚀 Starting new Site container..."
-                    # Запускаємо на порту 8081, щоб не "битися" з самим Jenkins (8080)
+                    # Запускаємо на порті 8081 (або 80, якщо він вільний на агенті)
                     docker run -d --name site --restart=always -p 8081:80 mihajlo1357/site
                 '''
             }
@@ -35,7 +36,10 @@ pipeline {
     
     post {
         success {
-            echo '✅ Все працює! Перевіряй http://IP_СЕРВЕРА:8081'
+            echo '✅ Успіх! Сайт запущено на віддаленому агенті.'
+        }
+        failure {
+            echo '❌ Помилка! Перевір Console Output.'
         }
     }
 }
